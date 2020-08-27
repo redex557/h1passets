@@ -66,11 +66,11 @@ def get_h1_assets(token, handle, category):
 		"Accept": "*/*"}
 	resp = requests.post('https://hackerone.com/graphql',headers=hdrs,data=query)
 	data = json.loads(resp.text)
-	
+	#print("\n# "+str(handle))	
 	for elem in data["data"]["query"]["_team_A"]["_structured_scopes_B"]["edges"]:
 			if elem["node"]["asset_type"] in categories[category]:
 				if elem["node"]["eligible_for_bounty"] == True:
-					print (str(elem["node"]["asset_identifier"]))
+					print (str(handle)+";"+str(elem["node"]["asset_identifier"]))
 
 def get_h1_privassets(token, catagory):
 	H1_XAUTH_TOKEN = token
