@@ -30,6 +30,11 @@ import sys
 import requests
 import base64
 import json
+import re
+
+regx_trailingstar = r"""
+	(\/\s*(\w\w) )*
+	"""
 
 categories = {
 	"url" 	  	: ["URL"],
@@ -66,11 +71,22 @@ def get_h1_assets(token, handle, category):
 		"Accept": "*/*"}
 	resp = requests.post('https://hackerone.com/graphql',headers=hdrs,data=query)
 	data = json.loads(resp.text)
-	#print("\n# "+str(handle))	
 	for elem in data["data"]["query"]["_team_A"]["_structured_scopes_B"]["edges"]:
 			if elem["node"]["asset_type"] in categories[category]:
 				if elem["node"]["eligible_for_bounty"] == True:
-					print (str(handle)+";"+str(elem["node"]["asset_identifier"]))
+					for asset in str(elem["node"]["asset_identifier"]).split(","):	# fix private programs that write multiple domains in one field :/
+						if asset.endswith(".*"):
+							tlds = []
+							test_str = elem["node"]["rendered_instruction"]
+							matches = re.finditer(regx_trailingstar, test_str, re.MULTILINE | re.VERBOSE)
+							for matchNum, match in enumerate(matches, start=1):							
+								groupNum = 2
+								if match.group(groupNum) is not None:
+									tlds.append(str(match.group(groupNum)))
+							for tld in tlds:
+								print (str(handle)+";"+asset[:-1]+tld)
+						else:
+							print (str(handle)+";"+asset)
 
 def get_h1_privassets(token, catagory):
 	H1_XAUTH_TOKEN = token
